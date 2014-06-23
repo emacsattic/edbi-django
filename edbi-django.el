@@ -34,6 +34,14 @@
 (defvar edbi-django-script (f-join edbi-django-directory "edbi_django.py")
   "Script path to read django settings.")
 
+(defun edbi-django-completing-read (prompt collection)
+  "Ask with PROMPT for COLLECTION element."
+  (cond
+   ((eq (length collection) 1)
+    (car collection))
+   ((> (length collection) 1)
+    (completing-read prompt collection))))
+
 (defun edbi-django-settings ()
   "Read django settings."
   (let ((python-shell-interpreter "python")
