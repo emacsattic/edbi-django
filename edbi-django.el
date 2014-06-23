@@ -26,6 +26,7 @@
 
 (require 'python)
 (require 'json)
+(require 'edbi)
 (require 'f)
 
 (defvar edbi-django-directory (f-dirname load-file-name)
@@ -33,6 +34,22 @@
 
 (defvar edbi-django-script (f-join edbi-django-directory "edbi_django.py")
   "Script path to read django settings.")
+
+(defvar edbi-django-engines
+  '(("django.db.backends.postgresql_psycopg2" . "Pg")
+    ("django.db.backends.sqlite3" . "SQLite")
+    ("django.db.backends.oracle" . "Oracle")
+    ("django.db.backends.mysql" . "mysql"))
+  "Django to DBI engines mapping.")
+
+(defvar edbi-django-options
+  '(("NAME" . "dbname")
+    ("HOST" . "host")
+    ("PORT" . "port"))
+  "Django to BDI connect options mapping.")
+
+(defvar edbi-django-connection nil
+  "Django edbi connection.")
 
 (defun edbi-django-completing-read (prompt collection)
   "Ask with PROMPT for COLLECTION element."
@@ -52,17 +69,6 @@
          (shell-command-to-string
           (python-shell-parse-command)))
       (error (error "Unable to read database django settings")))))
-
-(defvar edbi-django-engines
-  '(("django.db.backends.postgresql_psycopg2" . "Pg")
-    ("django.db.backends.sqlite3" . "SQLite")
-    ("django.db.backends.oracle" . "Oracle")
-    ("django.db.backends.mysql" . "mysql"))
-  "Django to DBI engines mapping.")
-
-(defvar edbi-django-options
-  '(("NAME" . "dbname"))
-  "Django to BDI connect options mapping.")
 
 (defun edbi-django-filter (item mapping)
   "Get Django ITEM by DBI MAPPING."
@@ -93,11 +99,40 @@
      options)
     (mapconcat 'identity params ";")))
 
+(defun edbi-django-databases (settings)
+  "Databases list defined in SETTINGS."
+  (let (databases)
+    (maphash
+     (lambda (key value)
+       (push key databases))
+     settings)
+    (sort databases 'string<)))
+
 (defun edbi-django-uri (options)
   "Generate DBI connection uri from Django OPTIONS."
   (format "%s:%s"
           (edbi-django-format-engine options)
           (edbi-django-format-options options)))
+
+(defun edbi-django-user (options)
+  "Get USER from Django OPTIONS."
+  (gethash "USER" options))
+
+(defun edbi-django-password (options)
+  "Get PASSWORD from Django OPTIONS."
+  (gethash "PASSWORD" options))
+
+(defun edbi-django-connect ()
+  "Connect to database used in Django."
+  (let* ((settings (edbi-django-settings))
+         (databases (edbi-django-databases settings))
+         (database (edbi-django-completing-read "Database: " databases))
+         (options (gethash database settings)))
+    (setq edbi-django-connection (edbi:start))
+    (edbi:connect edbi-django-connection
+                  (edbi:data-source (edbi-django-uri options)
+                                    (edbi-django-user options)
+                                    (edbi-django-password options)))))
 
 (provide 'edbi-django)
 

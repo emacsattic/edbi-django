@@ -41,3 +41,21 @@
 (ert-deftest test-build-dbi-format-options ()
   (should (s-equals? (edbi-django-format-options (gethash "default" (edbi-django-settings)))
                      (concat "dbname=" (f-join project-directory "db.sqlite3")))))
+
+(ert-deftest test-read-table-list ()
+  (edbi-django-connect)
+  (should (equal '("auth_group"
+                   "auth_group_permissions"
+                   "auth_permission"
+                   "auth_user"
+                   "auth_user_groups"
+                   "auth_user_user_permissions"
+                   "django_admin_log"
+                   "django_content_type"
+                   "django_session")
+                 (sort (--map
+                        (cadr it)
+                        (edbi:sync edbi:select-all-d
+                                   edbi-django-connection
+                                   "SELECT * FROM sqlite_master WHERE type='table';"))
+                       'string<))))
