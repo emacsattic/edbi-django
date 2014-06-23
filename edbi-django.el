@@ -47,9 +47,11 @@
   (let ((python-shell-interpreter "python")
         (python-shell-interpreter-args edbi-django-script)
         (json-object-type 'plist))
-    (json-read-from-string
-     (shell-command-to-string
-      (python-shell-parse-command)))))
+    (condition-case nil
+        (json-read-from-string
+         (shell-command-to-string
+          (python-shell-parse-command)))
+      (error (error "Unable to read database django settings")))))
 
 (provide 'edbi-django)
 
