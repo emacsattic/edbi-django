@@ -5,7 +5,7 @@
 ;; Author: Malyshev Artem <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/edbi-django
 ;; Version: 0.0.1
-;; Package-Require: ((emacs "24") (f "0.16.2"))
+;; Package-Requires: ((emacs "24") (edbi "0.1.3") (f "0.16.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
