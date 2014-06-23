@@ -18,3 +18,8 @@
 (setenv "DJANGO_SETTINGS_MODULE" "project.settings")
 
 (setenv "PYTHONPATH" project-directory)
+
+(unless (file-exists-p (f-join project-directory "db.sqlite3"))
+  (shell-command "django-admin.py syncdb --noinput" "*syncdb*")
+  (with-current-buffer "*syncdb*"
+    (message (buffer-string))))
