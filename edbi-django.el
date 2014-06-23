@@ -46,12 +46,58 @@
   "Read django settings."
   (let ((python-shell-interpreter "python")
         (python-shell-interpreter-args edbi-django-script)
-        (json-object-type 'plist))
+        (json-object-type 'hash-table))
     (condition-case nil
         (json-read-from-string
          (shell-command-to-string
           (python-shell-parse-command)))
       (error (error "Unable to read database django settings")))))
+
+(defvar edbi-django-engines
+  '(("django.db.backends.postgresql_psycopg2" . "Pg")
+    ("django.db.backends.sqlite3" . "SQLite")
+    ("django.db.backends.oracle" . "Oracle")
+    ("django.db.backends.mysql" . "mysql"))
+  "Django to DBI engines mapping.")
+
+(defvar edbi-django-options
+  '(("NAME" . "dbname"))
+  "Django to BDI connect options mapping.")
+
+(defun edbi-django-filter (item mapping)
+  "Get Django ITEM by DBI MAPPING."
+  (cdr (--first (s-equals? (car it) item) mapping)))
+
+(defun edbi-django-engine (engine)
+  "Get DBI engine by Django ENGINE."
+  (edbi-django-filter engine edbi-django-engines))
+
+(defun edbi-django-option (option)
+  "Get DBI option by Django OPTION."
+  (edbi-django-filter option edbi-django-options))
+
+(defun edbi-django-format-engine (options)
+  "Generate DBI engine info from Django OPTIONS."
+  (format "dbi:%s" (edbi-django-engine (gethash "ENGINE" options))))
+
+(defun edbi-django-format-options (options)
+  "Generate DBI options from Django OPTIONS."
+  (let ((ignore-options '("ENGINE" "USER" "PASSWORD"))
+        params)
+    (maphash
+     (lambda (key value)
+       (unless (member key ignore-options)
+         (push
+          (format "%s=%s" (edbi-django-option key) value)
+          params)))
+     options)
+    (mapconcat 'identity params ";")))
+
+(defun edbi-django-uri (options)
+  "Generate DBI connection uri from Django OPTIONS."
+  (format "%s:%s"
+          (edbi-django-format-engine options)
+          (edbi-django-format-options options)))
 
 (provide 'edbi-django)
 

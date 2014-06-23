@@ -1,9 +1,9 @@
 (require 'ert)
 
 (ert-deftest test-read-django-settings ()
-  (let ((settings (plist-get (edbi-django-settings) :default)))
-    (should (s-equals? (plist-get settings :ENGINE) "django.db.backends.sqlite3"))
-    (should (s-equals? (plist-get settings :NAME) (f-join project-directory "db.sqlite3")))))
+  (let ((settings (gethash "default" (edbi-django-settings))))
+    (should (s-equals? (gethash "ENGINE" settings) "django.db.backends.sqlite3"))
+    (should (s-equals? (gethash "NAME" settings) (f-join project-directory "db.sqlite3")))))
 
 (ert-deftest test-read-settings-error ()
   (let* ((envvar "DJANGO_SETTINGS_MODULE=project.settings")
@@ -27,3 +27,17 @@
 (ert-deftest test-completing-read-multiple ()
   (let ((completing-read-function (lambda (p c &rest i) (car c))))
     (should (s-equals? "first" (edbi-django-completing-read "" '("first" "second"))))))
+
+(ert-deftest test-get-dbi-engine ()
+  (should (s-equals? "Pg" (edbi-django-engine "django.db.backends.postgresql_psycopg2"))))
+
+(ert-deftest test-get-dbi-option ()
+  (should (s-equals? "dbname" (edbi-django-option "NAME"))))
+
+(ert-deftest test-build-dbi-format-engine ()
+  (should (s-equals? (edbi-django-format-engine (gethash "default" (edbi-django-settings)))
+                     "dbi:SQLite")))
+
+(ert-deftest test-build-dbi-format-options ()
+  (should (s-equals? (edbi-django-format-options (gethash "default" (edbi-django-settings)))
+                     (concat "dbname=" (f-join project-directory "db.sqlite3")))))
