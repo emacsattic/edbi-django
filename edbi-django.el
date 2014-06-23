@@ -134,6 +134,13 @@
                                     (edbi-django-user options)
                                     (edbi-django-password options)))))
 
+(defun edbi-django ()
+  "Connect to Django databases."
+  (interactive)
+  (edbi-django-connect)
+  (deferred:call 'edbi:dbview-open
+    (edbi:connection-ds edbi-django-connection)))
+
 (provide 'edbi-django)
 
 ;;; edbi-django.el ends here
