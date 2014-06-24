@@ -31,6 +31,12 @@ Also if you use virtual environment you need to provide
 
     (setq python-shell-virtualenv-path "/home/user/path/to/env/")
 
+After Django project databases settings are available for you.  Run
+command below and select available databases with your preferred
+completing system::
+
+    M-x edbi-django
+
 .. _Edbi: https://github.com/kiwanami/emacs-edbi
 .. _Django: https://docs.djangoproject.com/
 .. _Melpa: http://melpa.milkbox.net/

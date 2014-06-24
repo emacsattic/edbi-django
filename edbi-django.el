@@ -33,6 +33,12 @@
 ;; `python-shell-virtualenv-path' variable
 ;;
 ;;     (setq python-shell-virtualenv-path "/home/user/path/to/env/")
+;;
+;; After Django project databases settings are available for you.  Run
+;; command below and select available databases with your preferred
+;; completing system
+;;
+;;     M-x edbi-django
 
 ;;; Code:
 
