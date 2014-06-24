@@ -146,6 +146,7 @@
                                     (edbi-django-user options)
                                     (edbi-django-password options)))))
 
+;;;###autoload
 (defun edbi-django ()
   "Connect to Django databases."
   (interactive)
