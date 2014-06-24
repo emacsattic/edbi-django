@@ -138,8 +138,7 @@
   "Connect to Django databases."
   (interactive)
   (edbi-django-connect)
-  (deferred:call 'edbi:dbview-open
-    (edbi:connection-ds edbi-django-connection)))
+  (edbi:dbview-open edbi-django-connection))
 
 (provide 'edbi-django)
 
