@@ -25,7 +25,7 @@ same values used to run ``django-admin.py`` command::
     M-x setenv RET PYTHONPATH RET /home/user/path/to/project/
 
 Also if you use virtual environment you need to provide
-``python-shell-virtualenv-path`` variable::
+``python-shell-virtualenv-path`` variable.
 
 .. code:: lisp
 
