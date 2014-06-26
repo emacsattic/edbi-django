@@ -81,7 +81,8 @@
   "Read django settings."
   (let ((python-shell-interpreter "python")
         (python-shell-interpreter-args edbi-django-script)
-        (json-object-type 'hash-table))
+        (json-array-type 'list)
+        (json-key-type 'string))
     (condition-case nil
         (json-read-from-string
          (shell-command-to-string
@@ -92,60 +93,31 @@
   "Get Django ITEM by DBI MAPPING."
   (cdr (--first (s-equals? (car it) item) mapping)))
 
-(defun edbi-django-engine (engine)
-  "Get DBI engine by Django ENGINE."
-  (edbi-django-filter engine edbi-django-engines))
-
-(defun edbi-django-option (option)
-  "Get DBI option by Django OPTION."
-  (edbi-django-filter option edbi-django-options))
-
-(defun edbi-django-format-engine (options)
-  "Generate DBI engine info from Django OPTIONS."
-  (format "dbi:%s" (edbi-django-engine (gethash "ENGINE" options))))
-
-(defun edbi-django-format-options (options)
-  "Generate DBI options from Django OPTIONS."
-  (let ((ignore-options '("ENGINE" "USER" "PASSWORD"))
-        params)
-    (maphash
-     (lambda (key value)
-       (unless (member key ignore-options)
-         (push
-          (format "%s=%s" (edbi-django-option key) value)
-          params)))
-     options)
-    (mapconcat 'identity params ";")))
-
 (defun edbi-django-databases (settings)
   "Databases list defined in SETTINGS."
-  (let (databases)
-    (maphash
-     (lambda (key value)
-       (push key databases))
-     settings)
-    (sort databases 'string<)))
+  (--map (car it) settings))
 
 (defun edbi-django-uri (options)
   "Generate DBI connection uri from Django OPTIONS."
-  (format "%s:%s"
-          (edbi-django-format-engine options)
-          (edbi-django-format-options options)))
+  (let* ((engine (edbi-django-filter (cdr (assoc "ENGINE" options)) edbi-django-engines))
+         (params (--remove (-contains? '("ENGINE" "USER" "PASSWORD") (car it)) options))
+         (uri (apply 'concat (-interpose ";" (--map (format "%s=%s" (edbi-django-filter (car it) edbi-django-options) (cdr it)) params)))))
+    (format "dbi:%s:%s" engine uri)))
 
 (defun edbi-django-user (options)
   "Get USER from Django OPTIONS."
-  (gethash "USER" options))
+  (cdr (assoc "USER" options)))
 
 (defun edbi-django-password (options)
   "Get PASSWORD from Django OPTIONS."
-  (gethash "PASSWORD" options))
+  (cdr (assoc "PASSWORD" options)))
 
 (defun edbi-django-connect ()
   "Connect to database used in Django."
   (let* ((settings (edbi-django-settings))
          (databases (edbi-django-databases settings))
          (database (edbi-django-completing-read "Database: " databases))
-         (options (gethash database settings)))
+         (options (cdr (assoc database settings))))
     (setq edbi-django-connection (edbi:start))
     (edbi:connect edbi-django-connection
                   (edbi:data-source (edbi-django-uri options)

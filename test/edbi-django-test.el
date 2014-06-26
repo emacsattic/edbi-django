@@ -1,9 +1,11 @@
 (require 'ert)
 
 (ert-deftest test-read-django-settings ()
-  (let ((settings (gethash "default" (edbi-django-settings))))
-    (should (s-equals? (gethash "ENGINE" settings) "django.db.backends.sqlite3"))
-    (should (s-equals? (gethash "NAME" settings) (f-join project-directory "db.sqlite3")))))
+  (let ((settings (cdr (assoc "default" (edbi-django-settings)))))
+    (should (s-equals? (cdr (assoc "ENGINE" settings))
+                       "django.db.backends.sqlite3"))
+    (should (s-equals? (cdr (assoc "NAME" settings))
+                       (f-join project-directory "db.sqlite3")))))
 
 (ert-deftest test-read-settings-error ()
   (let* ((envvar "DJANGO_SETTINGS_MODULE=project.settings")
@@ -28,19 +30,11 @@
   (let ((completing-read-function (lambda (p c &rest i) (car c))))
     (should (s-equals? "first" (edbi-django-completing-read "" '("first" "second"))))))
 
-(ert-deftest test-get-dbi-engine ()
-  (should (s-equals? "Pg" (edbi-django-engine "django.db.backends.postgresql_psycopg2"))))
-
-(ert-deftest test-get-dbi-option ()
-  (should (s-equals? "dbname" (edbi-django-option "NAME"))))
-
-(ert-deftest test-build-dbi-format-engine ()
-  (should (s-equals? (edbi-django-format-engine (gethash "default" (edbi-django-settings)))
-                     "dbi:SQLite")))
-
-(ert-deftest test-build-dbi-format-options ()
-  (should (s-equals? (edbi-django-format-options (gethash "default" (edbi-django-settings)))
-                     (concat "dbname=" (f-join project-directory "db.sqlite3")))))
+(ert-deftest test-get-dbi-uri ()
+  (let ((database (cdr (assoc "default" (edbi-django-settings)))))
+    (should (s-equals?  (edbi-django-uri database)
+                        (concat "dbi:SQLite:dbname="
+                                (f-join project-directory "db.sqlite3"))))))
 
 (ert-deftest test-read-table-list ()
   (edbi-django-connect)
@@ -59,3 +53,8 @@
                                    edbi-django-connection
                                    "SELECT * FROM sqlite_master WHERE type='table';"))
                        'string<))))
+
+(ert-deftest test-databases-list ()
+  (should (equal (edbi-django-databases
+                  (edbi-django-settings))
+                 '("default"))))
