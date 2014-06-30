@@ -99,10 +99,13 @@
 
 (defun edbi-django-uri (options)
   "Generate DBI connection uri from Django OPTIONS."
-  (let* ((engine (edbi-django-filter (cdr (assoc "ENGINE" options)) edbi-django-engines))
-         (params (--remove (-contains? '("ENGINE" "USER" "PASSWORD") (car it)) options))
-         (uri (apply 'concat (-interpose ";" (--map (format "%s=%s" (edbi-django-filter (car it) edbi-django-options) (cdr it)) params)))))
-    (format "dbi:%s:%s" engine uri)))
+  (format "dbi:%s:%s"
+          (edbi-django-filter (cdr (assoc "ENGINE" options)) edbi-django-engines)
+          (->> options
+            (--remove (-contains? '("ENGINE" "USER" "PASSWORD") (car it)))
+            (--map (format "%s=%s" (edbi-django-filter (car it) edbi-django-options) (cdr it)))
+            (-interpose ";")
+            (apply 'concat))))
 
 (defun edbi-django-user (options)
   "Get USER from Django OPTIONS."
