@@ -103,6 +103,7 @@
           (edbi-django-filter (cdr (assoc "ENGINE" options)) edbi-django-engines)
           (->> options
             (--remove (-contains? '("ENGINE" "USER" "PASSWORD") (car it)))
+            (--remove (s-blank? (cdr it)))
             (--map (format "%s=%s" (edbi-django-filter (car it) edbi-django-options) (cdr it)))
             (-interpose ";")
             (apply 'concat))))

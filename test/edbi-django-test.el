@@ -36,6 +36,17 @@
                         (concat "dbi:SQLite:dbname="
                                 (f-join project-directory "db.sqlite3"))))))
 
+(ert-deftest test-dbi-uri-filter-empty-params ()
+  (let ((database '(("ENGINE" . "django.db.backends.postgresql_psycopg2")
+                    ("HOST" . "localhost")
+                    ("NAME" . "bars_web_edu")
+                    ("PASSWORD" . "bars_web_edu")
+                    ("PORT" . "")
+                    ("USER" . "bars_web_edu"))))
+    (should (-same-items?
+             (s-split "[:;]" (edbi-django-uri database))
+             (list "dbi" "Pg" "host=localhost" "dbname=bars_web_edu")))))
+
 (ert-deftest test-read-table-list ()
   (edbi-django-connect)
   (should (equal '("auth_group"
