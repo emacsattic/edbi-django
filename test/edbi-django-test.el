@@ -70,6 +70,7 @@
 ;;; Database connection.
 
 (ert-deftest test-read-table-list ()
+  (edbi-django-disconnect)
   (edbi-django-connect)
   (should (equal '("auth_group"
                    "auth_group_permissions"

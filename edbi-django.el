@@ -128,6 +128,11 @@
                                     (edbi-django-user options)
                                     (edbi-django-password options)))))
 
+(defun edbi-django-disconnect ()
+  "Disconnect from Django database."
+  (when edbi-django-connection
+    (edbi:disconnect-d edbi-django-connection)))
+
 ;;;###autoload
 (defun edbi-django ()
   "Connect to Django databases."
