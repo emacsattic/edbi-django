@@ -123,10 +123,12 @@
          (database (edbi-django-completing-read "Database: " databases))
          (options (cdr (assoc database settings))))
     (setq edbi-django-connection (edbi:start))
-    (edbi:connect edbi-django-connection
-                  (edbi:data-source (edbi-django-uri options)
-                                    (edbi-django-user options)
-                                    (edbi-django-password options)))))
+    (condition-case nil
+        (edbi:connect edbi-django-connection
+                      (edbi:data-source (edbi-django-uri options)
+                                        (edbi-django-user options)
+                                        (edbi-django-password options)))
+      (error (error "Unable to connect to django database")))))
 
 (defun edbi-django-disconnect ()
   "Disconnect from Django database."
