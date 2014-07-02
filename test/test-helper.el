@@ -1,3 +1,9 @@
+;;; test-helper.el --- ert-runner test helper
+
+;;; Commentary:
+
+;;; Code:
+
 (require 'cask)
 
 (defvar root-directory (locate-dominating-file load-file-name "Cask"))
@@ -7,8 +13,6 @@
 (cask-initialize root-directory)
 
 (add-to-list 'load-path root-directory)
-
-(require 'edbi-django)
 
 (unless (file-exists-p project-directory)
   (let ((default-directory root-directory))
@@ -23,3 +27,7 @@
   (shell-command "django-admin.py syncdb --noinput" "*syncdb*")
   (with-current-buffer "*syncdb*"
     (message (buffer-string))))
+
+(provide 'test-helper)
+
+;;; test-helper.el ends here

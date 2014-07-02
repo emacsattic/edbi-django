@@ -1,4 +1,13 @@
+;;; edbi-django-test.el --- edbi-django test suite
+
+;;; Commentary:
+
+;;; Code:
+
 (require 'ert)
+(require 'edbi-django)
+
+;;; Read settings.
 
 (ert-deftest test-read-django-settings ()
   (let ((settings (cdr (assoc "default" (edbi-django-settings)))))
@@ -20,6 +29,15 @@
                            (edbi-django-settings)
                          (error (error-message-string err)))))))
 
+;;; Read databases list.
+
+(ert-deftest test-databases-list ()
+  (should (equal (edbi-django-databases
+                  (edbi-django-settings))
+                 '("default"))))
+
+;;; Completing system.
+
 (ert-deftest test-completing-read-nil ()
   (should (null (edbi-django-completing-read "" nil))))
 
@@ -29,6 +47,8 @@
 (ert-deftest test-completing-read-multiple ()
   (let ((completing-read-function (lambda (p c &rest i) (car c))))
     (should (s-equals? "first" (edbi-django-completing-read "" '("first" "second"))))))
+
+;;; Database uri generation.
 
 (ert-deftest test-get-dbi-uri ()
   (let ((database (cdr (assoc "default" (edbi-django-settings)))))
@@ -46,6 +66,8 @@
     (should (-same-items?
              (s-split "[:;]" (edbi-django-uri database))
              (list "dbi" "Pg" "host=localhost" "dbname=bars_web_edu")))))
+
+;;; Database connection.
 
 (ert-deftest test-read-table-list ()
   (edbi-django-connect)
@@ -65,7 +87,6 @@
                                    "SELECT * FROM sqlite_master WHERE type='table';"))
                        'string<))))
 
-(ert-deftest test-databases-list ()
-  (should (equal (edbi-django-databases
-                  (edbi-django-settings))
-                 '("default"))))
+(provide 'edbi-django-test)
+
+;;; edbi-django-test.el ends here
