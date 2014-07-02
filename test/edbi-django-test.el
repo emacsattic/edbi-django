@@ -88,6 +88,13 @@
                                    "SELECT * FROM sqlite_master WHERE type='table';"))
                        'string<))))
 
+(ert-deftest test-connection-error-on-wrong-settings ()
+  (edbi-django-disconnect)
+  (let* ((module "DJANGO_SETTINGS_MODULE=fixtures.postgres")
+         (path (concat "PYTHONPATH=" (f-join root-directory "test")))
+         (process-environment (append (list module path) process-environment)))
+    (should-error (edbi-django-connect))))
+
 (provide 'edbi-django-test)
 
 ;;; edbi-django-test.el ends here

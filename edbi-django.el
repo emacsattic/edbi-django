@@ -131,7 +131,7 @@
 (defun edbi-django-disconnect ()
   "Disconnect from Django database."
   (when edbi-django-connection
-    (edbi:disconnect-d edbi-django-connection)))
+    (edbi:finish edbi-django-connection)))
 
 ;;;###autoload
 (defun edbi-django ()
