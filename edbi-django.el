@@ -77,16 +77,28 @@
    ((> (length collection) 1)
     (completing-read prompt collection))))
 
+(defun edbi-django-python ()
+  "Detect python executable."
+  (let ((python (if (eq system-type 'windows-nt) "pythonw" "python"))
+        (bin (if (eq system-type 'windows-nt) "Scripts" "bin")))
+    (--if-let python-shell-virtualenv-path
+        (f-join it bin python)
+      python)))
+
+(defun edbi-django-command ()
+  "Shell command to get django settings."
+  (format "%s %s"
+          (edbi-django-python)
+          edbi-django-script))
+
 (defun edbi-django-settings ()
   "Read django settings."
-  (let ((python-shell-interpreter "python")
-        (python-shell-interpreter-args edbi-django-script)
-        (json-array-type 'list)
+  (let ((json-array-type 'list)
         (json-key-type 'string))
     (condition-case nil
         (json-read-from-string
          (shell-command-to-string
-          (python-shell-parse-command)))
+          (edbi-django-command)))
       (error (error "Unable to read database django settings")))))
 
 (defun edbi-django-filter (item mapping)
