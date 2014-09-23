@@ -47,10 +47,10 @@
 (require 'edbi)
 (require 'f)
 
-(defvar edbi-django-directory (f-dirname load-file-name)
+(defvar edbi-django-directory (file-name-directory load-file-name)
   "Directory contain `django-edbi' package.")
 
-(defvar edbi-django-script (f-join edbi-django-directory "edbi_django.py")
+(defvar edbi-django-script "edbi_django.py"
   "Script path to read django settings.")
 
 (defvar edbi-django-engines
@@ -93,7 +93,8 @@
 
 (defun edbi-django-settings ()
   "Read django settings."
-  (let ((json-array-type 'list)
+  (let ((default-directory edbi-django-directory)
+        (json-array-type 'list)
         (json-key-type 'string))
     (condition-case nil
         (json-read-from-string
