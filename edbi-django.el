@@ -5,7 +5,7 @@
 ;; Author: Malyshev Artem <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/edbi-django
 ;; Version: 0.0.1
-;; Package-Requires: ((emacs "24") (edbi "0.1.3") (f "0.16.2"))
+;; Package-Requires: ((emacs "24") (edbi "0.1.3") (f "0.17.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@
 (require 'f)
 
 (defvar edbi-django-directory (file-name-directory load-file-name)
-  "Directory contain `django-edbi' package.")
+  "Directory contain `edbi-django' package.")
 
 (defvar edbi-django-script "edbi_django.py"
   "Script path to read django settings.")
