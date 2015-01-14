@@ -1,9 +1,24 @@
+.. |travis| image:: https://travis-ci.org/proofit404/edbi-django.png
+    :target: https://travis-ci.org/proofit404/edbi-django
+    :alt: Build Status
+
+.. |coveralls| image:: https://coveralls.io/repos/proofit404/edbi-django/badge.png
+    :target: https://coveralls.io/r/proofit404/edbi-django
+    :alt: Coverage Status
+
+.. |requires| image:: https://requires.io/github/proofit404/edbi-django/requirements.svg
+    :target: https://requires.io/github/proofit404/edbi-django/requirements
+    :alt: Requirements Status
+
+.. |melpa| image:: http://melpa.org/packages/edbi-django-badge.svg
+    :target: http://melpa.org/#/edbi-django
+    :alt: Melpa
+
+===========
 Edbi Django
 ===========
 
-.. image:: https://travis-ci.org/proofit404/edbi-django.png
-    :target: https://travis-ci.org/proofit404/edbi-django
-    :alt: Build Status
+|travis| |coveralls| |requires| |melpa|
 
 Edbi_ helper for Django_ projects.
 
