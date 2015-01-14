@@ -14,7 +14,10 @@ before_install:
 install:
   - sudo cpanm -nq DBI DBD::SQLite RPC::EPC::Service
   - cask install
-  - pip install tox
+  - pip install tox coveralls-merge
 
 script:
   - tox
+
+after_success:
+  - coveralls-merge emacs-coveralls.json

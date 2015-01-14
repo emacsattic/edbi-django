@@ -14,6 +14,8 @@
 
 (add-to-list 'load-path root-directory)
 
+(undercover "*.el" (:report-file "emacs-coveralls.json"))
+
 (unless (file-exists-p project-directory)
   (let ((default-directory root-directory))
     (make-directory project-directory)
