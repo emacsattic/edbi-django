@@ -1,6 +1,6 @@
 ;;; edbi-django.el --- Run edbi with django settings
 
-;; Copyright (C) 2014-2015 by Artem Malyshev
+;; Copyright (C) 2014-2016 by Artem Malyshev
 
 ;; Author: Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/edbi-django
