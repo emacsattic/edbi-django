@@ -30,6 +30,4 @@
   (with-current-buffer "*syncdb*"
     (message (buffer-string))))
 
-(provide 'test-helper)
-
 ;;; test-helper.el ends here
