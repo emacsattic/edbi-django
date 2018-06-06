@@ -4,5 +4,4 @@
 
 (development
  (depends-on "cask")
- (depends-on "ert-runner")
- (depends-on "undercover"))
+ (depends-on "zenburn-theme"))
