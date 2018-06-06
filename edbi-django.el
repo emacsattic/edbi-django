@@ -65,6 +65,16 @@ print(dumps(settings.DATABASES))
          (pythonic-call-process :buffer standard-output
                                 :args (list "-c" edbi-django-command)))))))
 
+(defun edbi-django-add-test-databases (settings)
+  "Add test databases to the Django SETTINGS."
+  (--mapcat
+   (list it (cons (concat "test_" (car it))
+                  (--map (if (s-equals-p "NAME" (car it))
+                             (cons "NAME" (concat "test_" (cdr it)))
+                           it)
+                         (cdr it))))
+   settings))
+
 (defun edbi-django-databases (settings)
   "Databases list defined in SETTINGS."
   (mapcar 'car settings))
@@ -142,7 +152,7 @@ print(dumps(settings.DATABASES))
 (defun edbi-django ()
   "Connect to Django databases."
   (interactive)
-  (let* ((settings (edbi-django-settings))
+  (let* ((settings (edbi-django-add-test-databases (edbi-django-settings)))
          (databases (edbi-django-databases settings))
          (database (edbi-django-completing-read "Database: " databases))
          (options (cdr (assoc database settings)))
