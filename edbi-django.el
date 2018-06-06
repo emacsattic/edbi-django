@@ -83,21 +83,46 @@ print(dumps(settings.DATABASES))
 
 (defun edbi-django-dbname (options)
   "Get NAME from Django OPTIONS."
-  (--if-let (cdr (assoc "NAME" options))
-      (format "dbname=%s;" it)
-    ""))
+  (format "dbname=%s;" (cdr (assoc "NAME" options))))
 
 (defun edbi-django-host (options)
   "Get HOST from Django OPTIONS."
-  (--if-let (cdr (assoc "HOST" options))
-      (format "host=%s;" it)
-    ""))
+  (let* ((db-hostname (cdr (assoc "HOST" options)))
+         (db-port (cdr (assoc "PORT" options)))
+         (hostname (if (pythonic-remote-docker-p)
+                       "127.0.0.1"
+                     db-hostname)))
+    (when (pythonic-remote-docker-p)
+      (let* ((container-raw-description
+              (with-output-to-string
+                (with-current-buffer
+                    standard-output
+                  (call-process "docker" nil t nil "inspect"
+                                ;; FIXME: Get DB container name from
+                                ;; its host name inside internal
+                                ;; project network.
+                                db-hostname))))
+             (container-description
+              (let ((json-array-type 'list))
+                (json-read-from-string container-raw-description)))
+             (container-ip
+              (cdr (assoc 'IPAddress
+                          (cdadr (assoc 'Networks
+                                        (cdr (assoc 'NetworkSettings
+                                                    (car container-description))))))))
+             (process
+              (start-process "edbi-django-socat"
+                             "*edbi-django-socat*"
+                             "socat"
+                             (format "TCP4-LISTEN:%d" db-port)
+                             (format "TCP4:%s:%d" container-ip db-port))))
+        ;; TODO: Stop this process after EDBI exits.
+        (set-process-query-on-exit-flag process nil)))
+    (format "host=%s;" hostname)))
 
 (defun edbi-django-port (options)
   "Get PORT from Django OPTIONS."
-  (--if-let (cdr (assoc "PORT" options))
-      (format "port=%s;" it)
-    ""))
+  (format "port=%s;" (cdr (assoc "PORT" options))))
 
 (defun edbi-django-user (options)
   "Get USER from Django OPTIONS."
