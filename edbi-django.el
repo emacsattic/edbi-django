@@ -1,11 +1,11 @@
 ;;; edbi-django.el --- Run edbi with django settings
 
-;; Copyright (C) 2014-2016 by Artem Malyshev
+;; Copyright (C) 2014-2018 by Artem Malyshev
 
 ;; Author: Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/edbi-django
 ;; Version: 0.0.1
-;; Package-Requires: ((emacs "24") (edbi "0.1.3") (f "0.17.1"))
+;; Package-Requires: ((emacs "25") (pythonic "0.1.0") (edbi "0.1.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -26,16 +26,18 @@
 
 ;;; Code:
 
-(require 'python)
+(require 'pythonic)
 (require 'json)
 (require 'edbi)
 (require 'f)
 
-(defvar edbi-django-directory (file-name-directory load-file-name)
-  "Directory contain `edbi-django' package.")
+(defvar edbi-django-command "
+from __future__ import print_function
+from django.conf import settings
+from json import dumps
 
-(defvar edbi-django-script "edbi_django.py"
-  "Script path to read django settings.")
+print(dumps(settings.DATABASES))
+" "Python code to read django settings.")
 
 (defvar edbi-django-engines
   '(("django.db.backends.postgresql_psycopg2" . "Pg")
@@ -43,15 +45,6 @@
     ("django.db.backends.oracle" . "Oracle")
     ("django.db.backends.mysql" . "mysql"))
   "Django to DBI engines mapping.")
-
-(defvar edbi-django-options
-  '(("NAME" . "dbname")
-    ("HOST" . "host")
-    ("PORT" . "port"))
-  "Django to BDI connect options mapping.")
-
-(defvar edbi-django-connection nil
-  "Django edbi connection.")
 
 (defun edbi-django-completing-read (prompt collection)
   "Ask with PROMPT for COLLECTION element."
@@ -61,49 +54,50 @@
    ((> (length collection) 1)
     (completing-read prompt collection))))
 
-(defun edbi-django-python ()
-  "Detect python executable."
-  (let ((python (if (eq system-type 'windows-nt) "pythonw" "python"))
-        (bin (if (eq system-type 'windows-nt) "Scripts" "bin")))
-    (--if-let python-shell-virtualenv-path
-        (f-join it bin python)
-      python)))
-
-(defun edbi-django-command ()
-  "Shell command to get django settings."
-  (format "%s %s"
-          (edbi-django-python)
-          edbi-django-script))
-
 (defun edbi-django-settings ()
   "Read django settings."
-  (let ((default-directory edbi-django-directory)
-        (json-array-type 'list)
+  (let ((json-array-type 'list)
         (json-key-type 'string))
-    (condition-case nil
-        (json-read-from-string
-         (shell-command-to-string
-          (edbi-django-command)))
-      (error (error "Unable to read database django settings")))))
-
-(defun edbi-django-filter (item mapping)
-  "Get Django ITEM by DBI MAPPING."
-  (cdr (--first (s-equals? (car it) item) mapping)))
+    (json-read-from-string
+     (with-output-to-string
+       (with-current-buffer
+           standard-output
+         (pythonic-call-process :buffer standard-output
+                                :args (list "-c" edbi-django-command)))))))
 
 (defun edbi-django-databases (settings)
   "Databases list defined in SETTINGS."
-  (--map (car it) settings))
+  (mapcar 'car settings))
 
 (defun edbi-django-uri (options)
   "Generate DBI connection uri from Django OPTIONS."
   (format "dbi:%s:%s"
-          (edbi-django-filter (cdr (assoc "ENGINE" options)) edbi-django-engines)
-          (->> options
-            (--remove (-contains? '("ENGINE" "USER" "PASSWORD") (car it)))
-            (--remove (s-blank? (cdr it)))
-            (--map (format "%s=%s" (edbi-django-filter (car it) edbi-django-options) (cdr it)))
-            (-interpose ";")
-            (apply 'concat))))
+          (edbi-django-engine options)
+          (s-join "" (list (edbi-django-dbname options)
+                           (edbi-django-host options)
+                           (edbi-django-port options)))))
+
+(defun edbi-django-engine (options)
+  "Get ENGINE from Django OPTIONS."
+  (cdr (assoc (cdr (assoc "ENGINE" options)) edbi-django-engines)))
+
+(defun edbi-django-dbname (options)
+  "Get NAME from Django OPTIONS."
+  (--if-let (cdr (assoc "NAME" options))
+      (format "dbname=%s;" it)
+    ""))
+
+(defun edbi-django-host (options)
+  "Get HOST from Django OPTIONS."
+  (--if-let (cdr (assoc "HOST" options))
+      (format "host=%s;" it)
+    ""))
+
+(defun edbi-django-port (options)
+  "Get PORT from Django OPTIONS."
+  (--if-let (cdr (assoc "PORT" options))
+      (format "port=%s;" it)
+    ""))
 
 (defun edbi-django-user (options)
   "Get USER from Django OPTIONS."
@@ -113,31 +107,24 @@
   "Get PASSWORD from Django OPTIONS."
   (cdr (assoc "PASSWORD" options)))
 
-(defun edbi-django-connect ()
-  "Connect to database used in Django."
-  (let* ((settings (edbi-django-settings))
-         (databases (edbi-django-databases settings))
-         (database (edbi-django-completing-read "Database: " databases))
-         (options (cdr (assoc database settings))))
-    (setq edbi-django-connection (edbi:start))
-    (condition-case nil
-        (edbi:connect edbi-django-connection
-                      (edbi:data-source (edbi-django-uri options)
-                                        (edbi-django-user options)
-                                        (edbi-django-password options)))
-      (error (error "Unable to connect to django database")))))
-
-(defun edbi-django-disconnect ()
-  "Disconnect from Django database."
-  (when edbi-django-connection
-    (edbi:finish edbi-django-connection)))
+(defun edbi-django-data-source (options)
+  "Make `edbi' data source from Django OPTIONS."
+  (edbi:data-source (edbi-django-uri options)
+                    (edbi-django-user options)
+                    (edbi-django-password options)))
 
 ;;;###autoload
 (defun edbi-django ()
   "Connect to Django databases."
   (interactive)
-  (edbi-django-connect)
-  (edbi:dbview-open edbi-django-connection))
+  (let* ((settings (edbi-django-settings))
+         (databases (edbi-django-databases settings))
+         (database (edbi-django-completing-read "Database: " databases))
+         (options (cdr (assoc database settings)))
+         (connection (edbi:start))
+         (source (edbi-django-data-source options)))
+    (edbi:connect connection source)
+    (edbi:dbview-open connection)))
 
 (provide 'edbi-django)
 
