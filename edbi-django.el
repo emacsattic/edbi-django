@@ -103,31 +103,31 @@ print(dumps(settings.DATABASES))
                        "127.0.0.1"
                      db-hostname)))
     (when (pythonic-remote-docker-p)
-      (let* ((container-raw-description
-              (with-output-to-string
-                (with-current-buffer
-                    standard-output
-                  (call-process "docker" nil t nil "inspect"
-                                ;; FIXME: Get DB container name from
-                                ;; its host name inside internal
-                                ;; project network.
-                                db-hostname))))
-             (container-description
-              (let ((json-array-type 'list))
-                (json-read-from-string container-raw-description)))
-             (container-ip
-              (cdr (assoc 'IPAddress
-                          (cdadr (assoc 'Networks
-                                        (cdr (assoc 'NetworkSettings
-                                                    (car container-description))))))))
-             (process
-              (start-process "edbi-django-socat"
-                             "*edbi-django-socat*"
-                             "socat"
-                             (format "TCP4-LISTEN:%d" db-port)
-                             (format "TCP4:%s:%d" container-ip db-port))))
-        ;; TODO: Stop this process after EDBI exits.
-        (set-process-query-on-exit-flag process nil)))
+      (let ((compose-directory (pythonic-get-docker-compose-project)))
+        (when compose-directory
+          (let* ((compose-project (pythonic-get-docker-compose-filename compose-directory))
+                 (container-name (pythonic-get-docker-compose-container compose-project db-hostname))
+                 (container-raw-description
+                  (with-output-to-string
+                    (with-current-buffer
+                        standard-output
+                      (call-process "docker" nil t nil "inspect" container-name))))
+                 (container-description
+                  (let ((json-array-type 'list))
+                    (json-read-from-string container-raw-description)))
+                 (container-ip
+                  (cdr (assoc 'IPAddress
+                              (cdadr (assoc 'Networks
+                                            (cdr (assoc 'NetworkSettings
+                                                        (car container-description))))))))
+                 (process
+                  (start-process "edbi-django-socat"
+                                 "*edbi-django-socat*"
+                                 "socat"
+                                 (format "TCP4-LISTEN:%d" db-port)
+                                 (format "TCP4:%s:%d" container-ip db-port))))
+            ;; TODO: Stop this process after EDBI exits.
+            (set-process-query-on-exit-flag process nil)))))
     (format "host=%s;" hostname)))
 
 (defun edbi-django-port (options)
