@@ -6,7 +6,7 @@
 Edbi Django
 ===========
 
-|travis| |coveralls| |requires| |melpa|
+|melpa|
 
 Edbi_ helper for Django_ projects.
 
