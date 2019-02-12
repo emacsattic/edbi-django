@@ -42,6 +42,7 @@ print(dumps(settings.DATABASES))
 (defvar edbi-django-engines
   '(("django.db.backends.postgresql_psycopg2" . "Pg")
     ("django.db.backends.postgresql" . "Pg")
+    ("django.contrib.gis.db.backends.postgis" . "Pg")
     ("django.db.backends.sqlite3" . "SQLite")
     ("django.db.backends.oracle" . "Oracle")
     ("django.db.backends.mysql" . "mysql"))
